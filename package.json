@@ -1,0 +1,12 @@
+{
+  "name": "nahwu-bot",
+  "version": "1.0.0",
+  "description": "Bot Telegram belajar Ilmu Nahwu",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
