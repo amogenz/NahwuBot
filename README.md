@@ -1,24 +1,51 @@
-# 🕌 Nahwu Bot — Panduan Deploy ke Vercel
+# 🕌 NahwuBot v2 — Panduan Deploy ke Vercel
 
-Bot Telegram belajar Ilmu Nahwu interaktif. Gratis, tanpa server, cukup HP.
+Bot Telegram kuis Ilmu Nahwu, Shorof & Tajwid interaktif.
+UI: parse_mode HTML + tombol inline + tema warna per kategori.
+Soal 100% dari Database My Nahwu (repo `amogenz/Amogenz/db`).
 
 ---
 
 ## 📁 Struktur File
 
 ```
-nahwu-bot/
+NahwuBot/
 ├── api/
-│   └── webhook.js       ← Handler utama (Vercel function)
-├── lib/
-│   ├── database.js      ← Database soal Nahwu
-│   ├── game.js          ← Engine game (state, logika soal)
-│   └── format.js        ← Template pesan Telegram
+│   └── index.js          ← Handler utama (webhook Vercel) + UI + logika kuis
+├── db/
+│   ├── amogenzdb-lv1.js          ← Jurumiyah 1 (329 soal)
+│   ├── amogenzdb-lv2.js          ← Jurumiyah 2 (1007 soal)
+│   ├── amogenzdb-alfiyah-isim.js ← Alfiyah Isim (300 soal)
+│   ├── amogenzdb-alfiyah-fiil.js ← Alfiyah Fi'il (451 soal)
+│   ├── amogenzdb-shorof.js       ← Shorof (216 soal)
+│   ├── amogenzdb-bina.js         ← Bina' (172 soal)
+│   ├── amogenzdb-tasrif.js       ← Tasrif (184 soal)
+│   └── amogenzdb-tajwid.js       ← Tajwid (155 soal)
 ├── package.json
 ├── vercel.json
-├── setup-webhook.js     ← Script daftar webhook (jalankan sekali)
 └── README.md
 ```
+
+> File `db/*.js` adalah salinan dari `amogenz/Amogenz/db`
+> (format `export const` diubah menjadi `module.exports` agar bisa di-`require`).
+> Total ±2.814 soal valid per 5 Okt 2026.
+
+## 🎨 UI & Warna
+
+Telegram Bot API **tidak mendukung warna teks** (cek: https://core.telegram.org/bots/api#formatting-options),
+jadi warna dihadirkan lewat:
+
+- 🎨 **Tema warna per kategori** — 🟢 Jurumiyah 1, 🔵 Jurumiyah 2, 🟣 Alfiyah Isim,
+  🟠 Alfiyah Fi'il, 🟡 Shorof, 🔴 Bina', 🟤 Tasrif, ⚪ Tajwid
+- 🇦 🇧 🇨 🇩 tombol jawaban inline (ketuk, tanpa ketik angka)
+- 🟢 benar / 🔴 salah + penjelasan di *expandable blockquote* (ketuk untuk buka)
+- 🟩⬜ progress bar, 🔥 streak, ⭐ rating akurasi
+
+## 🔄 Cara Sinkron Ulang Database
+
+1. Download 8 file dari `https://github.com/amogenz/Amogenz/tree/main/db`
+2. Ubah baris `export const NAMA = ` menjadi `module.exports = `
+3. Timpa file di `db/` lalu push — Vercel redeploy otomatis
 
 ---
 
@@ -96,23 +123,22 @@ Kalau berhasil, Telegram akan balas:
 
 ---
 
-## 🔧 Cara Ganti Database Soal
+## 🔧 Format Database Soal
 
-Edit file `lib/database.js` — ganti array `DB` dengan database nahwu kamu.
+File `db/*.js` memakai format Database My Nahwu — **jangan dikarang**, salin verbatim:
 
-Format setiap soal:
 ```js
 {
-  teks_kalimat: "النص العربي",
+  teks_kalimat: "النص العربي",   // atau teks_potongan untuk Tajwid
   analysis: [
     {
       word: "الكلمة",
       steps: {
         1: {
           question: "Pertanyaannya?",
-          options: ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
-          correct: "Pilihan A",
-          explanation: "Penjelasan kenapa A benar..."
+          options: ["Pilihan A", "Pilihan B", "Pilihan C"],
+          correct: "Pilihan A",          // HARUS sama persis dengan salah satu options
+          explanation: "Penjelasan..."
         },
         2: { ... }
       }
@@ -121,18 +147,21 @@ Format setiap soal:
 }
 ```
 
+Bot otomatis melewati soal yang cacat (`correct` tidak ada di `options`, dsb.).
+
 ---
 
 ## 📱 Perintah Bot
 
 | Perintah | Fungsi |
 |----------|--------|
-| `/start` | Salam pembuka |
-| `/mulai` | Mulai belajar |
-| `/lanjut` | Lanjut soal berikutnya |
-| `/skor` | Lihat skor |
+| `/start` | Salam pembuka + tombol mulai |
+| `/mulai` / `/menu` | Pilih kategori materi (8 kategori berwarna) |
+| `/skor` | Lihat statistik: benar/salah/akurasi/streak |
 | `/reset` | Reset sesi |
 | `/help` | Bantuan |
+
+Jawaban: ketuk tombol 🇦 🇧 🇨 🇩 (atau ketik A–D / 1–4).
 
 ---
 
